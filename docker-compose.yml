@@ -1,0 +1,19 @@
+version: '3'
+services:
+  vpn-server:
+    build:
+      context: ./server
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 3001:3001
+    env_file:
+      - .env
+
+  dbs-project:
+    build:
+      context: ./client/dbs
+    ports:
+      - 3000:3000
+    depends_on:
+      - vpn-server

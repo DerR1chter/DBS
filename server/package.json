@@ -1,0 +1,29 @@
+{
+  "name": "dbs",
+  "version": "1.0.0",
+  "description": "DBS project for Uni Wien by Yehor Chulkov",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DerR1chter/DBS.git"
+  },
+  "keywords": [
+    "dbs"
+  ],
+  "author": "Yehor Chulkov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DerR1chter/DBS/issues"
+  },
+  "homepage": "https://github.com/DerR1chter/DBS#readme",
+  "dependencies": {
+    "axios": "^1.2.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mysql2": "^2.3.3",
+    "oracledb": "^5.5.0"
+  }
+}
