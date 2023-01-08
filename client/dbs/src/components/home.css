@@ -55,7 +55,10 @@
 }
 #badResult {
   background-image: linear-gradient(310deg,#e50303,#b50000);
+  font-size: 12px;
 }
+
+
 
 .home-image {
   top: 0px;
@@ -149,6 +152,17 @@
 
 .home-text {
   align-self: flex-start;
+}
+
+select {
+  text-align-last: right;
+  -webkit-text-align-last: right;
+  -moz-text-align-last: right;
+  -ms-text-align-last: right;
+}
+
+.loading {
+  justify-content: flex-start;
 }
 
 .home-button {

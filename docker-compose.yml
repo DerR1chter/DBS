@@ -1,6 +1,6 @@
 version: '3'
 services:
-  vpn-server:
+  server:
     build:
       context: ./server
     cap_add:
@@ -10,10 +10,10 @@ services:
     env_file:
       - .env
 
-  dbs-project:
+  client:
     build:
       context: ./client/dbs
     ports:
       - 3000:3000
     depends_on:
-      - vpn-server
+      - server

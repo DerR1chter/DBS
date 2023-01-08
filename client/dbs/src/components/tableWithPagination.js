@@ -16,22 +16,9 @@ function TableWithPagination(props) {
   useEffect(() => {
     
     setLoading(true);
-    let getRowsUrl;
-    let getDataUrl;
-    switch (currentView) {
-      case 'persons':
-        getRowsUrl = `http://localhost:3001/db?getRowsCount&view=persons`;
-        getDataUrl = `http://localhost:3001/db?getNRows&view=persons&page=${page}&pageSize=${pageSize}`;
-        break;
-      case 'payments':
-        getRowsUrl = `http://localhost:3001/db?getRowsCount&view=payments`;
-        getDataUrl = `http://localhost:3001/db?getNRows&view=payments&page=${page}&pageSize=${pageSize}`;
-        break;
-      default:
-        getRowsUrl = `http://localhost:3001/db?getRowsCount&view=persons`;
-        getDataUrl = `http://localhost:3001/db?getNRows&view=persons&page=${page}&pageSize=${pageSize}`;
-    }
-
+    const getRowsUrl = `http://localhost:3001/getRowsCount?view=${currentView}`;
+    const getDataUrl = `http://localhost:3001/getNRows?view=${currentView}&page=${page}&pageSize=${pageSize}`;
+    
     fetch(getRowsUrl)  
       .then(response => response.json()) 
       .then(data => {
@@ -66,7 +53,7 @@ function TableWithPagination(props) {
   function addPersons(event, role) {
     event.preventDefault();
     setAddPersonLoading(true);
-    fetch(`http://localhost:3001/db/generate?role=${role}`)
+    fetch(`http://localhost:3001/generate?role=${role}`)
     .then(response => response.json())
     .then(() => setAddPersonLoading(false));
   }

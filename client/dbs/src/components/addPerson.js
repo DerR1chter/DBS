@@ -411,7 +411,7 @@ const AddPerson = (props) => {
 				if (props.userAdded === 1) {
 				return <span className="home-text" id="goodResult">✓ User added</span>
 			} else if (props.userAdded === -1) {
-				return <span className="home-text" id="badResult">✗ An error occurred!</span>;
+				return <span className="home-text" id="badResult">✗ {props.error}</span>;
 			} else {
 				return null;
 			}})()}

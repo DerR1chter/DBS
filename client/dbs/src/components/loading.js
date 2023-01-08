@@ -8,7 +8,7 @@ const Loading = (props) => {
 			<span className="home-text-header">{props.header}</span>
 		</div>
 		<div className="home-container-row">
-			<div className="home-container-column-r">
+			<div className="home-container-column-r loading">
 				<div>Loading...</div>
 			</div>
 		</div>

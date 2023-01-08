@@ -26,10 +26,6 @@ RUN tar xvfz /tmp/BIGIPLinuxClient.tgz -C /tmp && \
     rm -f /tmp/BIGIPLinuxClient.tgz /tmp/BIGIPLinuxClient/linux_f5cli.x86_64.deb
 
 
-# # Copy the rest of your application code
-# COPY . /app
-# WORKDIR /app
-
 
 EXPOSE 3001
 

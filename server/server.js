@@ -6,8 +6,8 @@ const axios = require('axios');
 
 // Set up the database connection
 const dbConfig = {
-  user: process.env.USER,
-  password: process.env.PASSWORD,
+  user: 'a12024913',
+  password: '030498aA',
   connectString: '//oracle19.cs.univie.ac.at:1521/orclcdb'
 };
 
@@ -18,172 +18,191 @@ app.listen(3001, () => {
 
 app.use(cors());
 
-// Set up a route to handle requests to the database
-app.get('/db', async (req, res) => {
-  
-  const queryKeys = Object.keys(req.query);
-  const queryValues = Object.values(req.query);
-  // console.log(queryKeys);
-
+function dbHandler(res, queries) {
   let conn;
-  let result;
-  let result_2;
+  let results = [];
+  let ID_TO_REPLACE;
 
-  try {
-    // Create a new database connection
-    conn = await oracledb.getConnection(dbConfig);
-    
-    switch(queryKeys[0]) {
-      case 'addPerson':
-        const name = queryValues[2];
-        const surname = queryValues[3];
-        const email = queryValues[4];
-        const phone = queryValues[5];
+  async function execute() {
+    try {
+      conn = await oracledb.getConnection(dbConfig);
 
-        switch(queryValues[1]) {
-          case 'manager':
-            const gehalt = queryValues[6];
-            const description = queryValues[7];
-
-            result = await conn.execute(`INSERT INTO MITARBEITER VALUES (seq_mitarbeiter.nextval, '${surname}', '${name}', '${email}', '${phone}')`);
-            let id_manager = await conn.execute('SELECT MAX(MITARBEITER_ID) FROM MITARBEITER');
-            id_manager = id_manager.rows[0][0];
-            result_2 = await conn.execute(`INSERT INTO MANAGER VALUES ('${id_manager}', '${gehalt}', '${description}')`);
-            conn.execute('COMMIT');
-            break;
-          case 'lehrer':
-            const skype = queryValues[6];
-            const KW = queryValues[7];
-            const schulungsleitID = queryValues[8];
-            const managerID = queryValues[9];
-
-            result = await conn.execute(`INSERT INTO MITARBEITER VALUES (seq_mitarbeiter.nextval, '${surname}', '${name}', '${email}', '${phone}')`);
-            let id_lehrer = await conn.execute('SELECT MAX(MITARBEITER_ID) FROM MITARBEITER');
-            id_lehrer = id_lehrer.rows[0][0];
-
-            result_2 = await conn.execute(`INSERT INTO LEHRER VALUES ('${id_lehrer}', '${skype}', '${KW}', '${schulungsleitID}', '${managerID}')`);
-            conn.execute('COMMIT');
-            break;
-          case 'schueler':
-              const niveau = queryValues[6];
-              const gruppenID = queryValues[7];
-              const schuelerManagerID = queryValues[8];
-
-              const paymentDate = queryValues[9];
-              const paymentSum = queryValues[10];
-              result = await conn.execute(`INSERT INTO ZAHLUNG VALUES (seq_zahlung.nextval, TO_DATE('${paymentDate}', 'YYYY-MM-DD'), ${paymentSum})`);
-              
-              let zahlungsID = await conn.execute('SELECT MAX(ZAHLUNGS_ID) FROM ZAHLUNG');
-              zahlungsID = zahlungsID.rows[0][0];
-
-              
-              result = await conn.execute(`INSERT INTO SCHUELER (NACHNAME, VORNAME, EMAIL_ADRESS, TELEFONNUMMER, NIVEAU, GRUPPEN_ID, ZAHLUNGS_ID, MANAGER_ID) VALUES ('${surname}', '${name}', '${email}', '${phone}', '${niveau}', '${gruppenID}', '${zahlungsID}', '${schuelerManagerID}')`);
-              conn.execute('COMMIT');
-              break;
-        }
-        break;
-        
-      case 'getSchulungsleitIDs':
-        result = await conn.execute('SELECT MITARBEITER_ID FROM LEHRER');
-        break;
-
-      case 'getManagerIDs':
-        result = await conn.execute('SELECT MITARBEITER_ID FROM MANAGER');
-        break;
-
-      case 'getGruppenIDs':
-        result = await conn.execute('SELECT GRUPPEN_ID FROM GRUPPE');
-        break;
-
-      case 'getZahlungIDs':
-        result = await conn.execute('SELECT ZAHLUNGS_ID FROM ZAHLUNG');
-        break;
-
-      case 'deletePerson':
-        if (queryValues[1][0] === '4') {
-          result = await conn.execute(`DELETE FROM SCHUELER WHERE SCHUELER_ID = '${queryValues[1]}'`);
-        } else {
-          result = await conn.execute(`DELETE FROM MITARBEITER WHERE MITARBEITER_ID = '${queryValues[1]}'`);
-        }
-        conn.execute('COMMIT');
-        break;
-
-      case 'addGroup':
-        const start = queryValues[1];
-        const end = queryValues[2];
-        const teacherID = queryValues[3];
-        result = await conn.execute(`INSERT INTO GRUPPE VALUES (seq_gruppe.nextval, TO_DATE('${start}', 'YYYY-MM-DD'), TO_DATE('${end}', 'YYYY-MM-DD'), ${teacherID})`);
-        conn.execute('COMMIT');
-        break;
-
-      case 'addPayment':
-        const date = queryValues[1];
-        const sum = queryValues[2];
-        result = await conn.execute(`INSERT INTO ZAHLUNG VALUES (seq_zahlung.nextval, TO_DATE('${date}', 'YYYY-MM-DD'), ${sum})`);
-        conn.execute('COMMIT');
-        break;
       
-
-      case 'getNRows':
-        const view = queryValues[1];
-        const page = queryValues[2];
-        const pageSize = queryValues[3];
-        let statement;
-
-        switch (view) {
-          case 'persons':
-            statement = `SELECT * FROM (
-              SELECT p.*, ROWNUM rnum
-              FROM PERSONS p)
-              WHERE rnum between ${((page-1)*pageSize)+1} and ${(page*pageSize)+1}`;
-            break;
-          case 'payments':
-            statement = `SELECT * FROM (
-              SELECT p.*, ROWNUM rnum
-              FROM PAYMENTS p)
-              WHERE rnum between ${((page-1)*pageSize)+1} and ${(page*pageSize)+1}`;
-              break;
+      for (q of queries) {
+        if (q.includes('ID_TO_REPLACE')) {
+          q = q.replace('ID_TO_REPLACE', ID_TO_REPLACE);
         }
-        result = await conn.execute(statement);
-        break;
-      
-      case 'getRowsCount':
-        const selectedView = queryValues[1];
-        switch (selectedView) {
-          case 'persons':
-            result = await conn.execute(`SELECT COUNT(*) FROM PERSONS`);
-            break;
-          case 'payments':
-            result = await conn.execute(`SELECT COUNT(*) FROM PAYMENTS`);
-            break;
+        results.push(await conn.execute(q));
+
+        if (q.includes('SELECT MAX')) {
+          ID_TO_REPLACE = results.slice(-1)[0].rows[0][0];
         }
-        break;
-        
-      default:
-        // // Execute a SQL query against the database
-        result = await conn.execute('SELECT * FROM PERSONS');
-    }
-
-    res.json(result_2 !== undefined ? [result, result_2] : result);
-
-    // res.json(resultat_final);
-  } catch (err) {
-    // If there is an error, log it and send an error response to the client
-    console.error(err);
-    res.status(500).json({ error: 'An error occurred' });
-  } finally {
-    // Close the database connection
-    if (conn) {
-      try {
-        await conn.close();
-      } catch (err) {
-        console.error(err);
+      }
+      await conn.commit();
+    } catch (err) {
+      console.error(err);
+      results.push(err);
+      await conn.rollback();
+    } finally {
+      if (conn) {
+        try {
+          await conn.close();
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
+
+    return results;
   }
+  return execute();
+}
+
+app.get('/', async (req, res) => {
+  const statement = 'SELECT * FROM PERSONS';
+  const result = await dbHandler(res, [statement]);
+  res.send(result[0]);
 });
 
-app.get('/db/generate', async (req, res) => {
+app.get('/addManager', async (req, res) => {
+  const {name, surname, email, phone, gehalt, description} = req.query;
+  
+  let results = [];
+  
+  const query_1 = `INSERT INTO MITARBEITER VALUES (seq_mitarbeiter.nextval, '${surname}', '${name}', '${email}', '${phone}')`;
+  const query_2 = 'SELECT MAX(MITARBEITER_ID) FROM MITARBEITER';
+  const query_3 = `INSERT INTO MANAGER VALUES ('ID_TO_REPLACE', '${gehalt}', '${description}')`;
+  results = [...results, ...await (dbHandler(res, [query_1, query_2, query_3]))];
+    
+  const error = results.find(item => item.hasOwnProperty('errorNum'));
+
+  error ? res.status(500).json({ error: error.message }) : res.send(results);
+});
+
+app.get('/addTeacher', async (req, res) => {
+  const {name, surname, email, phone, skype, KW, schulungsleitID, managerID} = req.query;
+
+  let results = [];
+
+  const query_1 = `INSERT INTO MITARBEITER VALUES (seq_mitarbeiter.nextval, '${surname}', '${name}', '${email}', '${phone}')`;
+  const query_2 = 'SELECT MAX(MITARBEITER_ID) FROM MITARBEITER';
+  const query_3 = `INSERT INTO LEHRER VALUES ('ID_TO_REPLACE', '${skype}', '${KW}', '${schulungsleitID}', '${managerID}')`;
+  results = [...results, ...await (dbHandler(res, [query_1, query_2, query_3]))];
+    
+  const error = results.find(item => item.hasOwnProperty('errorNum'));
+  
+  error ? res.status(500).json({ error: error.message }) : res.send(results);
+  });
+
+app.get('/addStudent', async (req, res) => {
+  const {name, surname, email, phone, niveau, gruppenID, managerID, paymentDate, paymentSum} = req.query;
+  let results = [];
+
+  const query_1 = `INSERT INTO ZAHLUNG VALUES (seq_zahlung.nextval, TO_DATE('${paymentDate}', 'YYYY-MM-DD'), ${paymentSum})`;
+  const query_2 = 'SELECT MAX(ZAHLUNGS_ID) FROM ZAHLUNG';
+  const query_3 = `INSERT INTO SCHUELER (NACHNAME, VORNAME, EMAIL_ADRESS, TELEFONNUMMER, NIVEAU, GRUPPEN_ID, ZAHLUNGS_ID, MANAGER_ID) VALUES ('${surname}', '${name}', '${email}', '${phone}', '${niveau}', '${gruppenID}', 'ID_TO_REPLACE', '${managerID}')`;
+  results = [...results, ...await (dbHandler(res, [query_1, query_2, query_3]))];
+    
+  const error = results.find(item => item.hasOwnProperty('errorNum'));
+
+  error ? res.status(500).json({ error: error.message }) : res.send(results);
+  });
+
+// Set up a route to handle requests to the database
+app.get('/getSchulungsleitIDs', async (req, res) => {
+  const statement = 'SELECT MITARBEITER_ID FROM LEHRER';
+  const result = await dbHandler(res, [statement]);
+
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+
+});
+
+app.get('/getManagerIDs', async (req, res) => {
+  const statement = 'SELECT MITARBEITER_ID FROM MANAGER';
+  const result = await dbHandler(res, [statement]);
+
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+});
+
+app.get('/getGruppenIDs', async (req, res) => {
+  const statement = 'SELECT GRUPPEN_ID FROM GRUPPE';
+  const result = await dbHandler(res, [statement]);
+
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+});
+
+app.get('/getZahlungIDs', async (req, res) => {
+  const statement = 'SELECT ZAHLUNGS_ID FROM ZAHLUNG';
+  const result = await dbHandler(res, [statement]);
+  
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+});
+
+app.get('/deletePerson', async (req, res) => {
+  const {id} = req.query;
+  let statement;
+  id[0] === 4 ? statement = `DELETE FROM SCHUELER WHERE SCHUELER_ID = ${id}` : statement = `DELETE FROM MITARBEITER WHERE MITARBEITER_ID = ${id}`;
+  const result = await dbHandler(res, [statement]);
+
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+});
+
+app.get('/addGroup', async (req, res) => {
+  const {startDate, endDate, teacherID} = req.query;
+  const statement = `INSERT INTO GRUPPE VALUES (seq_gruppe.nextval, TO_DATE('${startDate}', 'YYYY-MM-DD'), TO_DATE('${endDate}', 'YYYY-MM-DD'), ${teacherID})`;
+  const result = await dbHandler(res, [statement]);
+
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+});
+
+app.get('/addPayment', async (req, res) => {
+  const {date, sum} = req.query;
+  const statement = `INSERT INTO ZAHLUNG VALUES (seq_zahlung.nextval, TO_DATE('${date}', 'YYYY-MM-DD'), ${sum})`;
+  const result = await dbHandler(res, [statement]);
+
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+});
+
+app.get('/getNRows', async (req, res) => {
+  const {view, page, pageSize} = req.query;
+  let statement;
+  view === 'persons' ?
+    statement = `SELECT * FROM (
+      SELECT p.*, ROWNUM rnum
+      FROM PERSONS p)
+      WHERE rnum between ${((page-1)*pageSize)+1} and ${(page*pageSize)+1}` :
+    statement = `SELECT * FROM (
+      SELECT p.*, ROWNUM rnum
+      FROM PAYMENTS p)
+      WHERE rnum between ${((page-1)*pageSize)+1} and ${(page*pageSize)+1}`;
+  const result = await dbHandler(res, [statement]);
+  
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+});
+
+app.get('/getRowsCount', async (req, res) => {
+  const {view} = req.query;
+  let statement;
+
+  view === 'persons' ?
+    statement = 'SELECT COUNT(*) FROM PERSONS' :
+    statement = 'SELECT COUNT(*) FROM PAYMENTS';
+  const result = await dbHandler(res, [statement]);
+  
+  const error = result.find(item => item.hasOwnProperty('errorNum'));
+  error ? res.status(500).json({ error: error.message }) : res.send(result[0]);
+});
+
+
+app.get('/generate', async (req, res) => {
   
   const queryValues = Object.values(req.query);
 
@@ -263,7 +282,7 @@ app.get('/db/generate', async (req, res) => {
               id_manager = id_manager.rows[0][0];
               result_2 = await conn.execute(`INSERT INTO MANAGER VALUES ('${id_manager}', '${gehalt}', '${description}')`);
             }
-            conn.execute('COMMIT');
+            conn.commit();
             break;
           case 'lehrer':
             for (let i = 0; i < 10; i++) {
@@ -273,7 +292,7 @@ app.get('/db/generate', async (req, res) => {
               id_lehrer = id_lehrer.rows[0][0];
               result_2 = await conn.execute(`INSERT INTO LEHRER VALUES ('${id_lehrer}', '${skype}', '${KW}', '${schulungsleitID}', '${managerID}')`);
             }
-            conn.execute('COMMIT');
+            conn.commit();
             break;
           case 'schueler':
             for (let i = 0; i < 10; i++) {
@@ -284,7 +303,7 @@ app.get('/db/generate', async (req, res) => {
 
               result_2 = await conn.execute(`INSERT INTO SCHUELER (NACHNAME, VORNAME, EMAIL_ADRESS, TELEFONNUMMER, NIVEAU, GRUPPEN_ID, ZAHLUNGS_ID, MANAGER_ID) VALUES ('${surname}', '${name}', '${email}', '${phone}', '${niveau}', '${gruppenID}', '${zahlungsID}', '${schuelerManagerID}')`);
             }
-              conn.execute('COMMIT');
+            conn.commit();
               break;
         }
 
@@ -296,6 +315,7 @@ app.get('/db/generate', async (req, res) => {
     // If there is an error, log it and send an error response to the client
     console.error(err);
     res.status(500).json({ error: 'An error occurred' });
+    conn.rollback();
   } finally {
     // Close the database connection
     if (conn) {

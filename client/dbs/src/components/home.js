@@ -56,6 +56,7 @@ const Home = (props) => {
   const [groupAdded, setGroupAdded] = useState(0);
   const [paymentAdded, setPaymentAdded] = useState(0);
   const [idToDelete, setIdToDelete] = useState(null);
+  const [error, setError] = useState(null);
 
   const personChangeHandler = e => {
 		const {name, value} = e.target;
@@ -94,50 +95,65 @@ const Home = (props) => {
 
   const addPerson = (event) => {
     event.preventDefault();
-    const name = personData.name;
-    const surname = personData.surname;
-    const email = personData.email;
-    const phone = personData.phone.replace('+', '%2b');
+    const {name, surname, email} = personData;
+    let phone = personData.phone;
+    if (phone === '' || phone === null) {
+      alert('Please enter a phone number again');
+      return;
+    } else {
+      phone = phone.replace('+', '%2b');
+    }
 
     switch(personData.role) {
       case 'manager':
         const gehalt = personData.gehalt;
         const description = personData.description;
 
-        fetch(`http://localhost:3001/db?addPerson&role=manager&name=${name}&surname=${surname}&email=${email}&phone=${phone}&gehalt=${gehalt}&description=${description}`)
+        fetch(`http://localhost:3001/addManager?name=${name}&surname=${surname}&email=${email}&phone=${phone}&gehalt=${gehalt}&description=${description}`)
         .then(response => response.json())
         .then((data) => {
-          Object.keys(data)[0] === 'error' ? setUserAdded(-1) : setUserAdded(1);
+          if (Object.keys(data)[0] === 'error') {
+            setUserAdded(-1);
+            setError(data.error)
+          } else {
+            setUserAdded(1);
+            setError(null);
+          }
           setPersonData(defaultPersonData);
           document.getElementById('addPerson').reset();
         })
         break;
       case 'lehrer':
-        const skype = personData.skype;
-        const KW = personData.KW;
-        const schulungsleitID = personData.schulungsleitID;
-        const managerID = personData.managerID;
+        const {skype, KW, schulungsleitID, managerID} = personData;
 
-        fetch(`http://localhost:3001/db?addPerson&role=lehrer&name=${name}&surname=${surname}&email=${email}&phone=${phone}&skype=${skype}&KW=${KW}&schulungsleitIDs=${schulungsleitID}&managerID=${managerID}`)
+        fetch(`http://localhost:3001/addTeacher?name=${name}&surname=${surname}&email=${email}&phone=${phone}&skype=${skype}&KW=${KW}&schulungsleitID=${schulungsleitID}&managerID=${managerID}`)
         .then(response => response.json())
         .then((data) => {
-          Object.keys(data)[0] === 'error' ? setUserAdded(-1) : setUserAdded(1);
+          if (Object.keys(data)[0] === 'error') {
+            setUserAdded(-1);
+            setError(data.error)
+          } else {
+            setUserAdded(1);
+            setError(null);
+          }
           setPersonData(defaultPersonData);
           document.getElementById('addPerson').reset();
         })
         break;
 
       case 'schueler':
-          const niveau = personData.niveau;
-          const gruppenID = personData.gruppenID;
-          const paymentDate = personData.paymentDate;
-          const paymentSum = personData.paymentSum;
-          const schuelerManagerID = personData.managerID;
-  
-          fetch(`http://localhost:3001/db?addPerson&role=schueler&name=${name}&surname=${surname}&email=${email}&phone=${phone}&niveau=${niveau}&gruppenID=${gruppenID}&managerIDs=${schuelerManagerID}&paymentDate=${paymentDate}&paymentSum=${paymentSum}`)
+          const {niveau, gruppenID, paymentDate, paymentSum, managerID: schuelerManagerID} = personData;
+          
+          fetch(`http://localhost:3001/addStudent?name=${name}&surname=${surname}&email=${email}&phone=${phone}&niveau=${niveau}&gruppenID=${gruppenID}&managerID=${schuelerManagerID}&paymentDate=${paymentDate}&paymentSum=${paymentSum}`)
           .then(response => response.json())
           .then((data) => {
-            Object.keys(data)[0] === 'error' ? setUserAdded(-1) : setUserAdded(1);
+            if (Object.keys(data)[0] === 'error') {
+              setUserAdded(-1);
+              setError(data.error)
+            } else {
+              setUserAdded(1);
+              setError(null);
+            }
             setPersonData(defaultPersonData);
             document.getElementById('addPerson').reset();
           })
@@ -151,9 +167,8 @@ const Home = (props) => {
 
   const addGroup = (event) => {
     event.preventDefault();
-    const startDate = groupData.startDate;
-    const endDate = groupData.endDate;
-    const teacherID = groupData.teacherID;
+
+    const {startDate, endDate, teacherID} = groupData;
 
     const startDateJS = new Date(startDate);
 		const endDateJS = new Date(endDate);
@@ -163,80 +178,72 @@ const Home = (props) => {
 		  return false;
 		}
 
-    fetch(`http://localhost:3001/db?addGroup&startDate=${startDate}&endDate=${endDate}&teacherID=${teacherID}`)
+    fetch(`http://localhost:3001/addGroup?startDate=${startDate}&endDate=${endDate}&teacherID=${teacherID}`)
     .then(response => response.json())
     .then((data) => {
       Object.keys(data)[0] === 'error' ? setGroupAdded(-1) : setGroupAdded(1);
       setGroupData(defaultGroupData);
       document.getElementById('addGroup').reset();
     })
-
-    setTimeout(() => {
-      setGroupAdded(0);
-    }, 5000);
-
   }
 
   const addPayment = (event) => {
     event.preventDefault();
-    const startDate = paymentData.startDate;
+    const date = paymentData.startDate;
     const sum = paymentData.sum;
 
 
-    fetch(`http://localhost:3001/db?addPayment&startDate=${startDate}&sum=${sum}`)
+    fetch(`http://localhost:3001/addPayment?date=${date}&sum=${sum}`)
     .then(response => response.json())
     .then((data) => {
       Object.keys(data)[0] === 'error' ? setPaymentAdded(-1) : setPaymentAdded(1);
       setPaymentData(defaultPaymentData);
       document.getElementById('addPayment').reset();
     })
-
-    setTimeout(() => {
-      setPaymentAdded(0);
-    }, 5000);
-
   }
 
   const deletePerson = (event) => {
     event.preventDefault();
 
-    fetch(`http://localhost:3001/db?deletePerson&id=${idToDelete}`)
+    fetch(`http://localhost:3001/deletePerson?id=${idToDelete}`)
     .then(response => response.json())
     .then(data => {
       Object.keys(data)[0] === 'error' || Object.values(data)[0] === 0 ? setUserDeleted(-1) : setUserDeleted(prevState => prevState + 1);
       document.getElementById('deletePerson').reset();
     })
-    setTimeout(() => {
-      setUserDeleted(0);
-    }, 5000);
   }
 
   React.useEffect(() => {
-    fetch(`http://localhost:3001/db`)
+    fetch(`http://localhost:3001/`)
       .then(response => response.json())
       .then(data => {
         setData(data);
-      }).then(() => fetch(`http://localhost:3001/db?getSchulungsleitIDs=true`))
+      }).then(() => fetch(`http://localhost:3001/getSchulungsleitIDs`))
 		  .then(response => response.json())
 		  .then(data => {
       setSchulungsleitIDs(data);
-		  }).then(() => fetch(`http://localhost:3001/db?getGruppenIDs=true`))
+		  }).then(() => fetch(`http://localhost:3001/getGruppenIDs`))
 		  .then(response => response.json())
 		  .then(data => {
 			setGruppenIDs(data);
-		  }).then(() => fetch(`http://localhost:3001/db?getZahlungIDs=true`))
+		  }).then(() => fetch(`http://localhost:3001/getZahlungIDs`))
 		  .then(response => response.json())
 		  .then(data => {
 			setZahlungIDs(data);
-		  }).then(() => fetch(`http://localhost:3001/db?getManagerIDs=true`))
+		  }).then(() => fetch(`http://localhost:3001/getManagerIDs`))
 		  .then(response => response.json())
 		  .then(data => {
 			setManagerIDs(data);
 		  }).catch(err => console.log(err));
+      const timeOut = error ? 10000 : 5000;
       setTimeout(() => {
         setUserAdded(0);
-      }, 5000);
-  }, [userAdded, userDeleted]);
+        setUserDeleted(0);
+        setPaymentAdded(0);
+        setGroupAdded(0);
+        setError(null);
+      }, timeOut);
+  }, [userAdded, userDeleted, groupAdded, paymentAdded, error]);
 
   return (
     <div className="home-container">
@@ -244,7 +251,6 @@ const Home = (props) => {
         <title>DBS Project</title>
         <meta property="og:title" content="DBS Project" />
       </Helmet>
-      {/* <Header></Header> */}
       <div className="home-hero">
         <div className="home-container01">
           <div className="home-card">
@@ -263,7 +269,7 @@ const Home = (props) => {
         
         <div className="home-container-main-row">
           {data && managerIDs && gruppenIDs && zahlungIDs && schulungsleitIDs ?
-          <AddPerson personChangeHandler={personChangeHandler} addPerson={addPerson} personRoleChangeHandler={personRoleChangeHandler} personData={personData} schulungsleitIDs={schulungsleitIDs} managerIDs={managerIDs} gruppenIDs={gruppenIDs} zahlungIDs={zahlungIDs} userAdded={userAdded} setUserAdded={setUserAdded} />
+          <AddPerson personChangeHandler={personChangeHandler} addPerson={addPerson} personRoleChangeHandler={personRoleChangeHandler} personData={personData} schulungsleitIDs={schulungsleitIDs} managerIDs={managerIDs} gruppenIDs={gruppenIDs} zahlungIDs={zahlungIDs} userAdded={userAdded} setUserAdded={setUserAdded} error={error} />
           :
           <Loading header={"Add person:"} />
           }
@@ -281,7 +287,11 @@ const Home = (props) => {
           :
           <Loading header={"Add group:"} />
           }
-          <AddPayment paymentChangeHandler={paymentChangeHandler} addPayment={addPayment} paymentData={paymentData} paymentAdded={paymentAdded} setPaymentAdded={setPaymentAdded} />
+          {data ?
+            <AddPayment paymentChangeHandler={paymentChangeHandler} addPayment={addPayment} paymentData={paymentData} paymentAdded={paymentAdded} setPaymentAdded={setPaymentAdded} />
+          :
+            <Loading header={"Delete person:"} />
+        	}
         </div>
         
         
@@ -292,7 +302,11 @@ const Home = (props) => {
           </div>
         </div>
         <div className="home-container-main-row">
-       { <TableWithPagination userAdded={userAdded} userDeleted={userDeleted} />}
+          {data ? 
+          <TableWithPagination userAdded={userAdded} userDeleted={userDeleted} /> 
+          : 
+          <Loading header={"Table view:"} />
+          }
         </div>
       </section>
      
