@@ -1,6 +1,5 @@
 FROM node:19-slim
 
-# Install dependencies
 WORKDIR /usr/app
 COPY ./ /usr/app
 

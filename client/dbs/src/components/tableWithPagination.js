@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import TableData from './tableData';
 
 function TableWithPagination(props) {
+
+  const server_host_name = window.location.host.split(':')[0];
+
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -16,8 +19,8 @@ function TableWithPagination(props) {
   useEffect(() => {
     
     setLoading(true);
-    const getRowsUrl = `http://localhost:3001/getRowsCount?view=${currentView}`;
-    const getDataUrl = `http://localhost:3001/getNRows?view=${currentView}&page=${page}&pageSize=${pageSize}`;
+    const getRowsUrl = `http://${server_host_name}:3001/getRowsCount?view=${currentView}`;
+    const getDataUrl = `http://${server_host_name}:3001/getNRows?view=${currentView}&page=${page}&pageSize=${pageSize}`;
     
     fetch(getRowsUrl)  
       .then(response => response.json()) 
@@ -53,7 +56,7 @@ function TableWithPagination(props) {
   function addPersons(event, role) {
     event.preventDefault();
     setAddPersonLoading(true);
-    fetch(`http://localhost:3001/generate?role=${role}`)
+    fetch(`http://${server_host_name}:3001/generate?role=${role}`)
     .then(response => response.json())
     .then(() => setAddPersonLoading(false));
   }
@@ -87,6 +90,7 @@ function TableWithPagination(props) {
         <select name="views" id="views" onChange={(e) => setCurrentView(e.target.value)}>
           <option value="persons">Persons</option>
           <option value="payments">Payments</option>
+          <option value="groups">Groups</option>
         </select>
       <form>
         <label htmlFor="pageSize">Rows per page:</label>

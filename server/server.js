@@ -6,13 +6,13 @@ const axios = require('axios');
 
 // Set up the database connection
 const dbConfig = {
-  user: 'a12024913',
-  password: '030498aA',
+  user:" a12024913",
+  password: "030498aA",
   connectString: '//oracle19.cs.univie.ac.at:1521/orclcdb'
 };
 
 // Set up the server to listen on port 3001
-app.listen(3001, () => {
+app.listen(3001, '0.0.0.0', () => {
   console.log('Server listening on port 3001');
 });
 
@@ -42,7 +42,6 @@ function dbHandler(res, queries) {
     } catch (err) {
       console.error(err);
       results.push(err);
-      await conn.rollback();
     } finally {
       if (conn) {
         try {
@@ -108,7 +107,7 @@ app.get('/addStudent', async (req, res) => {
   error ? res.status(500).json({ error: error.message }) : res.send(results);
   });
 
-// Set up a route to handle requests to the database
+
 app.get('/getSchulungsleitIDs', async (req, res) => {
   const statement = 'SELECT MITARBEITER_ID FROM LEHRER';
   const result = await dbHandler(res, [statement]);
@@ -173,15 +172,22 @@ app.get('/addPayment', async (req, res) => {
 app.get('/getNRows', async (req, res) => {
   const {view, page, pageSize} = req.query;
   let statement;
-  view === 'persons' ?
+  if (view === 'persons') {
     statement = `SELECT * FROM (
       SELECT p.*, ROWNUM rnum
       FROM PERSONS p)
-      WHERE rnum between ${((page-1)*pageSize)+1} and ${(page*pageSize)+1}` :
+      WHERE rnum between ${((page-1)*pageSize)+1} and ${(page*pageSize)+1}`;
+  } else if (view === 'payments') {
     statement = `SELECT * FROM (
       SELECT p.*, ROWNUM rnum
       FROM PAYMENTS p)
       WHERE rnum between ${((page-1)*pageSize)+1} and ${(page*pageSize)+1}`;
+    } else {
+      statement = `SELECT * FROM (
+        SELECT p.*, ROWNUM rnum
+        FROM GROUPS p)
+        WHERE rnum between ${((page-1)*pageSize)+1} and ${(page*pageSize)+1}`;
+    }
   const result = await dbHandler(res, [statement]);
   
   const error = result.find(item => item.hasOwnProperty('errorNum'));
@@ -192,9 +198,14 @@ app.get('/getRowsCount', async (req, res) => {
   const {view} = req.query;
   let statement;
 
-  view === 'persons' ?
-    statement = 'SELECT COUNT(*) FROM PERSONS' :
+  if (view === 'persons') {
+    statement = 'SELECT COUNT(*) FROM PERSONS';
+  } else if (view === 'payments') {
     statement = 'SELECT COUNT(*) FROM PAYMENTS';
+  } else {
+    statement = 'SELECT COUNT(*) FROM GROUPS';
+  }
+
   const result = await dbHandler(res, [statement]);
   
   const error = result.find(item => item.hasOwnProperty('errorNum'));
@@ -315,7 +326,6 @@ app.get('/generate', async (req, res) => {
     // If there is an error, log it and send an error response to the client
     console.error(err);
     res.status(500).json({ error: 'An error occurred' });
-    conn.rollback();
   } finally {
     // Close the database connection
     if (conn) {

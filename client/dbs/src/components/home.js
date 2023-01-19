@@ -13,6 +13,8 @@ import AddPayment from './addPayment'
 import TableWithPagination from './tableWithPagination'
 
 const Home = (props) => {
+ 
+  const server_host_name = window.location.host.split(':')[0];
 
   const defaultPersonData = {
     role: 'manager',
@@ -109,7 +111,7 @@ const Home = (props) => {
         const gehalt = personData.gehalt;
         const description = personData.description;
 
-        fetch(`http://localhost:3001/addManager?name=${name}&surname=${surname}&email=${email}&phone=${phone}&gehalt=${gehalt}&description=${description}`)
+        fetch(`http://${server_host_name}:3001/addManager?name=${name}&surname=${surname}&email=${email}&phone=${phone}&gehalt=${gehalt}&description=${description}`)
         .then(response => response.json())
         .then((data) => {
           if (Object.keys(data)[0] === 'error') {
@@ -126,7 +128,7 @@ const Home = (props) => {
       case 'lehrer':
         const {skype, KW, schulungsleitID, managerID} = personData;
 
-        fetch(`http://localhost:3001/addTeacher?name=${name}&surname=${surname}&email=${email}&phone=${phone}&skype=${skype}&KW=${KW}&schulungsleitID=${schulungsleitID}&managerID=${managerID}`)
+        fetch(`http://${server_host_name}:3001/addTeacher?name=${name}&surname=${surname}&email=${email}&phone=${phone}&skype=${skype}&KW=${KW}&schulungsleitID=${schulungsleitID}&managerID=${managerID}`)
         .then(response => response.json())
         .then((data) => {
           if (Object.keys(data)[0] === 'error') {
@@ -144,7 +146,7 @@ const Home = (props) => {
       case 'schueler':
           const {niveau, gruppenID, paymentDate, paymentSum, managerID: schuelerManagerID} = personData;
           
-          fetch(`http://localhost:3001/addStudent?name=${name}&surname=${surname}&email=${email}&phone=${phone}&niveau=${niveau}&gruppenID=${gruppenID}&managerID=${schuelerManagerID}&paymentDate=${paymentDate}&paymentSum=${paymentSum}`)
+          fetch(`http://${server_host_name}:3001/addStudent?name=${name}&surname=${surname}&email=${email}&phone=${phone}&niveau=${niveau}&gruppenID=${gruppenID}&managerID=${schuelerManagerID}&paymentDate=${paymentDate}&paymentSum=${paymentSum}`)
           .then(response => response.json())
           .then((data) => {
             if (Object.keys(data)[0] === 'error') {
@@ -178,7 +180,7 @@ const Home = (props) => {
 		  return false;
 		}
 
-    fetch(`http://localhost:3001/addGroup?startDate=${startDate}&endDate=${endDate}&teacherID=${teacherID}`)
+    fetch(`http://${server_host_name}:3001/addGroup?startDate=${startDate}&endDate=${endDate}&teacherID=${teacherID}`)
     .then(response => response.json())
     .then((data) => {
       Object.keys(data)[0] === 'error' ? setGroupAdded(-1) : setGroupAdded(1);
@@ -193,7 +195,7 @@ const Home = (props) => {
     const sum = paymentData.sum;
 
 
-    fetch(`http://localhost:3001/addPayment?date=${date}&sum=${sum}`)
+    fetch(`http://${server_host_name}:3001/addPayment?date=${date}&sum=${sum}`)
     .then(response => response.json())
     .then((data) => {
       Object.keys(data)[0] === 'error' ? setPaymentAdded(-1) : setPaymentAdded(1);
@@ -205,7 +207,7 @@ const Home = (props) => {
   const deletePerson = (event) => {
     event.preventDefault();
 
-    fetch(`http://localhost:3001/deletePerson?id=${idToDelete}`)
+    fetch(`http://${server_host_name}:3001/deletePerson?id=${idToDelete}`)
     .then(response => response.json())
     .then(data => {
       Object.keys(data)[0] === 'error' || Object.values(data)[0] === 0 ? setUserDeleted(-1) : setUserDeleted(prevState => prevState + 1);
@@ -214,23 +216,23 @@ const Home = (props) => {
   }
 
   React.useEffect(() => {
-    fetch(`http://localhost:3001/`)
+    fetch(`http://${server_host_name}:3001/`)
       .then(response => response.json())
       .then(data => {
         setData(data);
-      }).then(() => fetch(`http://localhost:3001/getSchulungsleitIDs`))
+      }).then(() => fetch(`http://${server_host_name}:3001/getSchulungsleitIDs`))
 		  .then(response => response.json())
 		  .then(data => {
       setSchulungsleitIDs(data);
-		  }).then(() => fetch(`http://localhost:3001/getGruppenIDs`))
+		  }).then(() => fetch(`http://${server_host_name}:3001/getGruppenIDs`))
 		  .then(response => response.json())
 		  .then(data => {
 			setGruppenIDs(data);
-		  }).then(() => fetch(`http://localhost:3001/getZahlungIDs`))
+		  }).then(() => fetch(`http://${server_host_name}:3001/getZahlungIDs`))
 		  .then(response => response.json())
 		  .then(data => {
 			setZahlungIDs(data);
-		  }).then(() => fetch(`http://localhost:3001/getManagerIDs`))
+		  }).then(() => fetch(`http://${server_host_name}:3001/getManagerIDs`))
 		  .then(response => response.json())
 		  .then(data => {
 			setManagerIDs(data);
